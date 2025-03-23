@@ -1,0 +1,171 @@
+import java.util.Scanner;
+
+class Regras {
+    public static void exibirRegras() {
+        System.out.println("=== Regras do Jogo da Velha ===");
+        System.out.println("- Escolha um número para o tamanho do tabuleiro (ex: 3 cria um tabuleiro 3x3)");
+        System.out.println("- O número 0 representa a primeira linha ou coluna");
+        System.out.println("- O primeiro jogador joga com 'X' e o segundo com 'O'");
+        System.out.println("- Ganha quem completar uma linha, coluna ou diagonal com seu símbolo");
+        System.out.println("- O mesmo tamanho do tabuleiro determinará a sequência necessária para vitória");
+        System.out.println("- Boa sorte e divirta-se!\n");
+    }
+}
+
+class JogoDaVelha {
+    private char[][] tabuleiro;
+    private int tamanho;
+
+    public JogoDaVelha(int tamanho) {
+        this.tamanho = tamanho;
+        tabuleiro = new char[tamanho][tamanho];
+        inicializarTabuleiro();
+    }
+
+    private void inicializarTabuleiro() {
+        for (int i = 0; i < tamanho; i++) {
+            for (int j = 0; j < tamanho; j++) {
+                tabuleiro[i][j] = '-';
+            }
+        }
+    }
+
+    public boolean realizaJogada(int linha, int coluna, char jogador) {
+        if (linha >= 0 && linha < tamanho && coluna >= 0 && coluna < tamanho && tabuleiro[linha][coluna] == '-') {
+            tabuleiro[linha][coluna] = jogador;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean verificaGanhador() {
+        for (int i = 0; i < tamanho; i++) {
+            if (verificaLinha(i) || verificaColuna(i)) return true;
+        }
+        return verificaDiagonalPrincipal() || verificaDiagonalSecundaria();
+    }
+
+    private boolean verificaLinha(int linha) {
+        char primeiro = tabuleiro[linha][0];
+        if (primeiro == '-') return false;
+        for (int j = 1; j < tamanho; j++) {
+            if (tabuleiro[linha][j] != primeiro) return false;
+        }
+        return true;
+    }
+
+    private boolean verificaColuna(int coluna) {
+        char primeiro = tabuleiro[0][coluna];
+        if (primeiro == '-') return false;
+        for (int i = 1; i < tamanho; i++) {
+            if (tabuleiro[i][coluna] != primeiro) return false;
+        }
+        return true;
+    }
+
+    private boolean verificaDiagonalPrincipal() {
+        char primeiro = tabuleiro[0][0];
+        if (primeiro == '-') return false;
+        for (int i = 1; i < tamanho; i++) {
+            if (tabuleiro[i][i] != primeiro) return false;
+        }
+        return true;
+    }
+
+    private boolean verificaDiagonalSecundaria() {
+        char primeiro = tabuleiro[0][tamanho - 1];
+        if (primeiro == '-') return false;
+        for (int i = 1; i < tamanho; i++) {
+            if (tabuleiro[i][tamanho - 1 - i] != primeiro) return false;
+        }
+        return true;
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (char[] linha : tabuleiro) {
+            for (char celula : linha) {
+                sb.append(celula).append(" ");
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+}
+
+class Jogador {
+    private String nome;
+    private int pontos;
+
+    public Jogador(String nome) {
+        this.nome = nome;
+        this.pontos = 0;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void adicionarPonto() {
+        pontos++;
+    }
+
+    public String toString() {
+        return nome + " tem " + pontos + " pontos.";
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        Regras.exibirRegras();
+
+        System.out.print("Nome do Jogador 1: ");
+        String nome1 = scanner.nextLine();
+        Jogador jogador1 = new Jogador(nome1);
+
+        System.out.print("Nome do Jogador 2: ");
+        String nome2 = scanner.nextLine();
+        Jogador jogador2 = new Jogador(nome2);
+
+        System.out.print("Digite o tamanho do tabuleiro: ");
+        int tamanho = scanner.nextInt();
+
+        boolean continuar = true;
+        while (continuar) {
+            JogoDaVelha jogo = new JogoDaVelha(tamanho);
+            boolean venceu = false;
+            char jogadorAtual = 'X';
+            int rodadas = 0;
+            int maxRodadas = tamanho * tamanho;
+
+            while (!venceu && rodadas < maxRodadas) {
+                System.out.println(jogo);
+                System.out.println("Jogador " + (jogadorAtual == 'X' ? jogador1.getNome() : jogador2.getNome()) + ", digite linha e coluna: ");
+                int linha = scanner.nextInt();
+                int coluna = scanner.nextInt();
+
+                if (jogo.realizaJogada(linha, coluna, jogadorAtual)) {
+                    rodadas++;
+                    if (jogo.verificaGanhador()) {
+                        venceu = true;
+                        System.out.println(jogo);
+                        System.out.println("Jogador " + (jogadorAtual == 'X' ? jogador1.getNome() : jogador2.getNome()) + " venceu!");
+                        if (jogadorAtual == 'X') jogador1.adicionarPonto();
+                        else jogador2.adicionarPonto();
+                    }
+                    jogadorAtual = (jogadorAtual == 'X') ? 'O' : 'X';
+                } else {
+                    System.out.println("número inválido, jogue novamente!");
+                }
+            }
+            System.out.println(jogador1);
+            System.out.println(jogador2);
+            System.out.println("Desejam jogar novamente? (s/n)");
+            continuar = scanner.next().equalsIgnoreCase("s");
+        }
+        System.out.println("Placar final:\n" + jogador1 + "\n" + jogador2);
+        scanner.close();
+    }
+}
