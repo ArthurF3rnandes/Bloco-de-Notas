@@ -1,0 +1,79 @@
+//  tarefa unisinos codigo em C, análise e aplicação de sistemas operacionais.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#define TAM 10
+
+// isso imprime a matriz
+void imprimirMatriz(int matriz[TAM][TAM]) {
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+            printf("%4d", matriz[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+// aqui é para imprimir a transposta da matriz
+void imprimirTransposta(int matriz[TAM][TAM]) {
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+            printf("%4d", matriz[j][i]);
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    int matriz[TAM][TAM];
+    int valor = 1;
+    int status;
+
+    // contabilizando a matriz com os valores de 1 a 100
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+            matriz[i][j] = valor++;
+        }
+    }
+
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("Erro ao criar processo filho");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) {
+        // processo do filhao
+        printf("\n[Filho - PID %d] Buscando a palavra \"Brasil\" no arquivo globo.txt...\n", getpid());
+
+        // em teoria aqui é para contar a palavra ''brasil'' no arquivo baixado
+        execlp("sh", "sh", "-c", "egrep -o 'Brasil' globo.txt | wc -l", NULL);
+
+        // caso o exec falhe
+        perror("Erro ao executar comando com exec");
+        exit(EXIT_FAILURE);
+    } else {
+        // processo do paizao
+        printf("[Pai - PID %d] Matriz original:\n", getpid());
+        imprimirMatriz(matriz);
+
+        printf("\n[Pai - PID %d] Matriz transposta:\n", getpid());
+        imprimirTransposta(matriz);
+
+        // aqui ele vai esperar o filhao
+        wait(&status);
+
+        if (WIFEXITED(status)) {
+            printf("\n[Pai] Processo filho finalizado com status %d\n", WEXITSTATUS(status));
+        } else {
+            printf("\n[Pai] Processo filho finalizou de forma anormal.\n");
+        }
+    }
+
+    return 0;
+}
