@@ -1,5 +1,11 @@
 //  tarefa unisinos codigo em C, análise e aplicação de sistemas operacionais.
 
+// para acessar ela deve realizar os seguintes comandos no Linux:
+// cd tarefa
+// ls (para visualizar se as pastas estão corretas mesmo, lembrando que deve ter já feito previamente o download via curl do site da globo que é o que estamos usando para ler a palavra ''Brasil'' que foi enviado a pasta listas.txt)
+// ./tarefa2 (para executar a tarefa)
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -49,10 +55,10 @@ int main() {
 
     if (pid == 0) {
         // processo do filhao
-        printf("\n[Filho - PID %d] Buscando a palavra \"Brasil\" no arquivo globo.txt...\n", getpid());
+        printf("\n[Filho - PID %d] Ao buscar pela palavra \"brasil\" no arquivo lista.txt a quantidade que temos é:\n", getpid());
 
-        // em teoria aqui é para contar a palavra ''brasil'' no arquivo baixado
-        execlp("sh", "sh", "-c", "egrep -o 'Brasil' globo.txt | wc -l", NULL);
+        // aqui vai para contar a palavra ''brasil'' no arquivo .txt do site
+        execlp("sh", "sh", "-c", "egrep -o brasil lista.txt | wc -l", NULL);
 
         // caso o exec falhe
         perror("Erro ao executar comando com exec");
