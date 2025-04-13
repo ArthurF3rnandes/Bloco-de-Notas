@@ -1,0 +1,204 @@
+// atividade unisinos criar um labirinto em java com array e retornar em um arquivo .txt com algumas questões
+
+// ==============================
+// Labirinto.java
+
+import java.util.Random;
+
+public class Labirinto {
+
+    /**
+     * Gera (aleatoriamente) um labirinto com saída possível.
+     * O labirinto terá dimensões fixas (8 linhas x 20 colunas);
+     * as paredes são 'X' e os caminhos, espaço (' ').
+     * Após preencher aleatoriamente, esse método “cava” um caminho garantido
+     * do início [0][0] até o destino [linhas-1][colunas-1].  
+     * O ponto inicial será marcado com 'A' e o destino com 'D'.
+     * 
+     * @param fileName O nome do labirinto (informação obtida via teclado).
+     *                 (Esse parâmetro não é usado para leitura de arquivo, 
+     *                 apenas para satisfazer a assinatura do método.)
+     * @return O labirinto gerado (array bidimensional de caracteres).
+     */
+    public char[][] carregaLab(String fileName) {
+        // Dimensões fixas (podem ser modificadas conforme desejar)
+        int linhas = 8;
+        int colunas = 20;
+        char[][] lab = new char[linhas][colunas];
+        Random rand = new Random(); // gera números aleatórios
+
+        // Preenche todo o labirinto com: espaço (caminho) com prob. 0.3 e 'X' (parede) com prob. 0.7.
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                if (rand.nextDouble() < 0.3) {
+                    lab[i][j] = ' ';
+                } else {
+                    lab[i][j] = 'X';
+                }
+            }
+        }
+        
+        // "Cava" um caminho garantido do início até o destino usando movimentos
+        // para a direita e para baixo.
+        int i = 0, j = 0;
+        lab[i][j] = ' '; // início do caminho
+        while (i != linhas - 1 || j != colunas - 1) {
+            if (i == linhas - 1) {          // só pode andar para a direita
+                j++;
+            } else if (j == colunas - 1) {    // só pode andar para baixo
+                i++;
+            } else {
+                // Se ambos os movimentos são possíveis, escolhe aleatoriamente
+                if (rand.nextBoolean()) {
+                    j++;
+                } else {
+                    i++;
+                }
+            }
+            lab[i][j] = ' '; // garante que este local faz parte do caminho
+        }
+        
+        // Define o ponto inicial e o destino
+        lab[0][0] = 'A';
+        lab[linhas - 1][colunas - 1] = 'D';
+        
+        return lab;
+    }
+
+    /**
+     * Método recursivo público que verifica se existe uma saída no labirinto.
+     * Recebe o labirinto (gerado via carregaLab) e inicia a verificação a partir da posição [0][0].
+     * 
+     * @param lab O labirinto a ser verificado (array bidimensional de caracteres).
+     * @return true se houver uma passagem do ponto inicial ao destino ('D'); 
+     *         false caso contrário.
+     */
+    public boolean Labirinto(char[][] lab) {
+        if(lab == null || lab.length == 0) {
+            return false;
+        }
+        return LabirintoRec(lab, 0, 0);
+    }
+    
+    /**
+     * Método recursivo privado que tenta encontrar um caminho do ponto (i, j) até 'D'.
+     * Critérios:
+     * - Se estiver fora dos limites, retorna false.
+     * - Se encontrar 'D', retorna true.
+     * - Se o local for uma parede ('X') ou já visitado ('*'), retorna false.
+     * - Caso contrário, marca a posição como visitada e tenta mover em 4 direções.
+     * 
+     * @param lab O labirinto.
+     * @param i   A linha atual.
+     * @param j   A coluna atual.
+     * @return true se encontrar o destino; false se não encontrar.
+     */
+    private boolean LabirintoRec(char[][] lab, int i, int j) {
+        int linhas = lab.length;
+        int colunas = lab[0].length;
+        
+        // Verifica se a posição está fora dos limites
+        if (i < 0 || i >= linhas || j < 0 || j >= colunas) {
+            return false;
+        }
+        
+        // Se encontrou o destino, retorna true
+        if (lab[i][j] == 'D') {
+            return true;
+        }
+        
+        // Se encontrar parede ou célula já visitada, não pode passar
+        if (lab[i][j] == 'X' || lab[i][j] == '*') {
+            return false;
+        }
+        
+        // Para 'A' (ponto inicial) ou espaço (caminho), marca como visitado para evitar ciclos
+        lab[i][j] = '*';
+        
+        // Tenta mover para as quatro direções: direita, abaixo, esquerda e cima
+        if (LabirintoRec(lab, i, j + 1)) return true;
+        if (LabirintoRec(lab, i + 1, j)) return true;
+        if (LabirintoRec(lab, i, j - 1)) return true;
+        if (LabirintoRec(lab, i - 1, j)) return true;
+        
+        return false;
+    }
+}
+
+
+// ==================================================
+// MainLabirinto.java
+// ==================================================
+
+
+import java.io.PrintWriter;
+import java.io.IOException;
+import java.util.Scanner;
+
+public class MainLabirinto {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // O usuário determina o nome do labirinto.
+        System.out.print("Digite o nome do labirinto: ");
+        String nomeLab = scanner.nextLine();
+
+        Labirinto labObj = new Labirinto();
+        // Gera o labirinto (o parâmetro é usado apenas para identificação, se desejar)
+        char[][] labOriginal = labObj.carregaLab(nomeLab);
+
+        // Cria uma cópia profunda do labirinto para testar o caminho sem modificar o original.
+        char[][] labCopia = clonaLabirinto(labOriginal);
+
+        // Verifica se existe uma saída (da posição [0][0] até 'D')
+        boolean temSaida = labObj.Labirinto(labCopia);
+        String resultado = temSaida ? "Existe uma saída" : "Não existe saída";
+
+        // Imprime o labirinto no terminal
+        System.out.println("\nLABIRINTO:\n");
+        String labirintoStr = "";
+        for (int i = 0; i < labOriginal.length; i++) {
+            for (int j = 0; j < labOriginal[i].length; j++) {
+                System.out.print(labOriginal[i][j]);
+                labirintoStr += labOriginal[i][j];
+            }
+            System.out.println();
+            labirintoStr += System.lineSeparator();
+        }
+        System.out.println("\n" + resultado);
+
+        // Acrescenta o resultado ao conteúdo que será gravado no arquivo
+        labirintoStr += System.lineSeparator() + resultado;
+
+        // Cria (ou sobrescreve) o arquivo "LabirintoTotal.txt" com o labirinto e a mensagem final
+        try (PrintWriter writer = new PrintWriter("LabirintoTotal.txt")) {
+            writer.println(labirintoStr);
+        } catch (IOException e) {
+            System.out.println("Erro ao gravar o arquivo LabirintoTotal.txt");
+            e.printStackTrace();
+        }
+
+        scanner.close();
+    }
+
+    /**
+     * Cria uma cópia profunda (clone) do array bidimensional recebido.
+     * Essa cópia garante que alterações na matriz clonada (por exemplo, pela recursão)
+     * não afetem o labirinto original, que será exibido no terminal e no arquivo.
+     *
+     * @param lab O labirinto original.
+     * @return Um clone do labirinto.
+     */
+    public static char[][] clonaLabirinto(char[][] lab) {
+        int linhas = lab.length;
+        int colunas = lab[0].length;
+        char[][] copia = new char[linhas][colunas];
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                copia[i][j] = lab[i][j];
+            }
+        }
+        return copia;
+    }
+}
